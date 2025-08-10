@@ -5,6 +5,12 @@ locals {
   s3_path_lambda_bootstrap_zip_basic = "lambda-bootstrap/basic.zip"
 }
 
+resource "random_string" "suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
 ########################################################
 # Lambda Bootstrap Archive
 ########################################################
@@ -29,11 +35,11 @@ resource "aws_s3_object" "lambda_bootstrap_zip_basic" {
 # Lambda Basic
 ########################################################
 
-module "lambda_basic" {
+module "basic_lambda" {
   source = "../modules/lambda"
 
   region        = var.region
-  function_name = "lambda-basic"
+  function_name = "lambda-basic-${random_string.suffix.result}"
   handler       = "index.handler"
   runtime       = "python3.12"
 

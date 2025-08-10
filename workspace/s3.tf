@@ -2,14 +2,8 @@
 # Artifact Bucket
 ########################################################
 
-resource "random_string" "bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
-
 resource "aws_s3_bucket" "artifact_bucket" {
-  bucket = "lambda-artifacts-${var.region}-${random_string.bucket_suffix.result}"
+  bucket = "lambda-artifacts-${var.region}-${random_string.suffix.result}"
 }
 
 # Enable versioning for artifact recovery
