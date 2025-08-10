@@ -1,33 +1,19 @@
-/*
 output "lambda_function_arn" {
-  value = module.lambda_function.lambda_function_arn
+  description = "ARN of the Lambda function"
+  value       = module.lambda_function.lambda_function_arn
 }
 
-output "lambda_function_source_code_hash" {
-  value = module.lambda_function.lambda_function_source_code_hash
+output "lambda_function_name" {
+  description = "Name of the Lambda function"
+  value       = module.lambda_function.lambda_function_name
 }
 
-output "lambda_function_source_code_size" {
-  value = module.lambda_function.lambda_function_source_code_size
+output "lambda_function_qualified_arn" {
+  description = "ARN identifying your Lambda Function Version"
+  value       = module.lambda_function.lambda_function_qualified_arn
 }
 
-output "lambda_function_cloudwatch_log_group_name" {
-  value = module.lambda_function.lambda_function_cloudwatch_log_group_name
+output "lambda_function_qualified_invoke_arn" {
+  description = "Qualified ARN (ARN with version) to be used for invoking the Lambda Function"
+  value       = module.lambda_function.lambda_function_qualified_invoke_arn
 }
-
-output "lambda_function_cloudwatch_log_group_arn" {
-  value = module.lambda_function.lambda_function_cloudwatch_log_group_arn
-}
-
-output "lambda_function_cloudwatch_log_group_retention_in_days" {
-  value = module.lambda_function.lambda_function_cloudwatch_log_group_retention_in_days
-}
-
-output "lambda_function_cloudwatch_log_group_kms_key_id" {
-  value = module.lambda_function.lambda_function_cloudwatch_log_group_kms_key_id
-}
-
-output "lambda_function_cloudwatch_log_group_kms_key_arn" {
-  value = module.lambda_function.lambda_function_cloudwatch_log_group_kms_key_arn
-}
-*/
