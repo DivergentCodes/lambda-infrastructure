@@ -3,7 +3,7 @@
 ########################################################
 
 resource "aws_s3_bucket" "artifact_bucket" {
-  bucket = "lambda-artifacts-${var.region}-${random_string.suffix.result}"
+  bucket = local.s3_lambda_artifact_bucket_name
 }
 
 # Enable versioning for artifact recovery

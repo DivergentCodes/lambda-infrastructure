@@ -6,6 +6,10 @@ variable "function_name" {
   type = string
 }
 
+variable "function_description" {
+  type = string
+}
+
 ########################################################
 # Compute
 ########################################################
@@ -35,16 +39,21 @@ variable "memory_size" {
 }
 
 ########################################################
-# Bootstrap code
+# S3 artifact bucket
 ########################################################
 
-variable "bootstrap_bucket_name" {
-  description = "The bucket with the bootstrap zip file to bootstrap the lambda function"
+variable "lambda_artifact_bucket_name" {
+  description = "The bucket with the Lambda artifacts"
   type        = string
 }
 
-variable "bootstrap_bucket_zip_path" {
-  description = "The path to the bootstrap zip file in the bootstrap bucket"
+variable "lambda_artifact_base_path" {
+  description = "The S3 base path to the Lambda artifacts in the artifact bucket"
+  type        = string
+}
+
+variable "lambda_artifact_bootstrap_zip_path" {
+  description = "The S3 path to the bootstrap zip file in the artifact bucket"
   type        = string
 }
 
