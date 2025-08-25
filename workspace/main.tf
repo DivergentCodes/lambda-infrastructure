@@ -14,30 +14,27 @@ resource "random_string" "suffix" {
 }
 
 ########################################################
-# Lambda Bootstrap Archive
+# GitHub OIDC Provider
 ########################################################
 
-# Create zip archive from Python source code
-data "archive_file" "lambda_bootstrap_zip" {
-  type        = "zip"
-  source_dir  = "./lambda-bootstrap/basic"
-  output_path = "./lambda-bootstrap/basic.zip"
-  excludes    = ["*.tf", "*.tfvars", "*.zip"]
+resource "aws_iam_openid_connect_provider" "github" {
+  count           = var.github_create_oidc_provider ? 1 : 0
+  url             = "https://token.actions.githubusercontent.com"
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = var.github_oidc_thumbprint_list
 }
 
-resource "aws_s3_object" "lambda_bootstrap_zip_basic" {
-  bucket = aws_s3_bucket.artifact_bucket.id
-  key    = local.s3_lambda_artifact_bootstrap_zip_path
-  source = data.archive_file.lambda_bootstrap_zip.output_path
-
-  depends_on = [data.archive_file.lambda_bootstrap_zip]
+data "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
 }
 
 ########################################################
 # Lambda Basic
 ########################################################
 
-module "basic_lambda" {
+module "lambda_application_zip" {
+  count = var.lambda_deployment_type == "zip" ? 1 : 0
+
   source = "../modules/lambda"
 
   region               = var.region
@@ -46,7 +43,10 @@ module "basic_lambda" {
   handler              = "index.handler"
   runtime              = "python3.12"
 
-  lambda_artifact_bucket_name        = aws_s3_bucket.artifact_bucket.id
-  lambda_artifact_base_path          = local.s3_lambda_artifact_base_path
-  lambda_artifact_bootstrap_zip_path = local.s3_lambda_artifact_bootstrap_zip_path
+  github_owner       = var.github_owner
+  github_repo        = var.github_repo
+  github_environment = var.github_environment
+  github_region      = var.github_region
+
+  ecr_repository_name = var.ecr_repository_name
 }
