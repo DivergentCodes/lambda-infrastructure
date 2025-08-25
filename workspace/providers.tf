@@ -5,7 +5,7 @@ provider "aws" {
     tags = {
       project     = "lambda-infrastructure"
       environment = "demo"
+      repository  = "https://github.com/DivergentCodes/lambda-infrastructure"
     }
   }
 }
-

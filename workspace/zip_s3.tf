@@ -2,19 +2,15 @@
 # Artifact Bucket
 ########################################################
 
-resource "random_string" "bucket_suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
-
 resource "aws_s3_bucket" "artifact_bucket" {
-  bucket = "lambda-artifacts-${var.region}-${random_string.bucket_suffix.result}"
+  count  = var.lambda_deployment_type == "zip" ? 1 : 0
+  bucket = local.s3_lambda_artifact_bucket_name
 }
 
 # Enable versioning for artifact recovery
 resource "aws_s3_bucket_versioning" "artifact_bucket_versioning" {
-  bucket = aws_s3_bucket.artifact_bucket.id
+  count  = var.lambda_deployment_type == "zip" ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[0].id
   versioning_configuration {
     status = "Enabled"
   }
@@ -22,7 +18,8 @@ resource "aws_s3_bucket_versioning" "artifact_bucket_versioning" {
 
 # Enable server-side encryption
 resource "aws_s3_bucket_server_side_encryption_configuration" "artifact_bucket_encryption" {
-  bucket = aws_s3_bucket.artifact_bucket.id
+  count  = var.lambda_deployment_type == "zip" ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[0].id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -34,7 +31,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "artifact_bucket_e
 
 # Block public access
 resource "aws_s3_bucket_public_access_block" "artifact_bucket_public_access_block" {
-  bucket = aws_s3_bucket.artifact_bucket.id
+  count  = var.lambda_deployment_type == "zip" ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[0].id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -44,7 +42,8 @@ resource "aws_s3_bucket_public_access_block" "artifact_bucket_public_access_bloc
 
 # Bucket policy to deny non-SSL requests
 resource "aws_s3_bucket_policy" "artifact_bucket_policy" {
-  bucket     = aws_s3_bucket.artifact_bucket.id
+  count      = var.lambda_deployment_type == "zip" ? 1 : 0
+  bucket     = aws_s3_bucket.artifact_bucket[0].id
   depends_on = [aws_s3_bucket_public_access_block.artifact_bucket_public_access_block]
 
   policy = jsonencode({
@@ -56,8 +55,8 @@ resource "aws_s3_bucket_policy" "artifact_bucket_policy" {
         Principal = "*"
         Action    = "s3:*"
         Resource = [
-          aws_s3_bucket.artifact_bucket.arn,
-          "${aws_s3_bucket.artifact_bucket.arn}/*"
+          aws_s3_bucket.artifact_bucket[0].arn,
+          "${aws_s3_bucket.artifact_bucket[0].arn}/*"
         ]
         Condition = {
           Bool = {
@@ -74,7 +73,7 @@ resource "aws_s3_bucket_policy" "artifact_bucket_policy" {
         Action = [
           "s3:GetObject"
         ]
-        Resource = "${aws_s3_bucket.artifact_bucket.arn}/*"
+        Resource = "${aws_s3_bucket.artifact_bucket[0].arn}/*"
         Condition = {
           StringEquals = {
             "aws:SourceAccount" = data.aws_caller_identity.current.account_id
@@ -87,7 +86,8 @@ resource "aws_s3_bucket_policy" "artifact_bucket_policy" {
 
 # Lifecycle rules for artifact management
 resource "aws_s3_bucket_lifecycle_configuration" "artifact_bucket_lifecycle" {
-  bucket = aws_s3_bucket.artifact_bucket.id
+  count  = var.lambda_deployment_type == "zip" ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[0].id
 
   rule {
     id     = "artifact_cleanup"
@@ -129,8 +129,33 @@ resource "aws_s3_bucket_lifecycle_configuration" "artifact_bucket_lifecycle" {
 
 # Enable access logging for audit
 resource "aws_s3_bucket_logging" "artifact_bucket_logging" {
-  bucket = aws_s3_bucket.artifact_bucket.id
+  count  = var.lambda_deployment_type == "zip" ? 1 : 0
+  bucket = aws_s3_bucket.artifact_bucket[0].id
 
-  target_bucket = aws_s3_bucket.artifact_bucket.id
+  target_bucket = aws_s3_bucket.artifact_bucket[0].id
   target_prefix = "logs/"
+}
+
+########################################################
+# Lambda Bootstrap Archive
+########################################################
+
+# Create zip archive from Python source code
+data "archive_file" "lambda_bootstrap_zip" {
+  count = var.lambda_deployment_type == "zip" ? 1 : 0
+
+  type        = "zip"
+  source_dir  = "./lambda-bootstrap/basic"
+  output_path = "./lambda-bootstrap/basic.zip"
+  excludes    = ["*.tf", "*.tfvars", "*.zip"]
+}
+
+resource "aws_s3_object" "lambda_bootstrap_zip_basic" {
+  count = var.lambda_deployment_type == "zip" ? 1 : 0
+
+  bucket = aws_s3_bucket.artifact_bucket[0].id
+  key    = local.s3_lambda_artifact_bootstrap_zip_path
+  source = data.archive_file.lambda_bootstrap_zip[0].output_path
+
+  depends_on = [data.archive_file.lambda_bootstrap_zip[0]]
 }
