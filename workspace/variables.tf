@@ -14,6 +14,12 @@ variable "lambda_deployment_type" {
   }
 }
 
+variable "lambda_ecr_image_tag" {
+  description = "The tag of the ECR image."
+  type        = string
+  default     = ""
+}
+
 variable "github_create_oidc_provider" {
   description = "Whether to create the GitHub OIDC provider."
   type        = bool

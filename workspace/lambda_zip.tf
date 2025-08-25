@@ -8,7 +8,7 @@ module "lambda_application_zip" {
   source = "../modules/lambda"
 
   region               = var.region
-  function_name        = "lambda-basic-${random_string.suffix.result}"
+  function_name        = "lambda-zip-${random_string.suffix.result}"
   function_description = "Demo function for split application & infrastructure"
   handler              = "index.handler"
   runtime              = "python3.12"
@@ -17,6 +17,4 @@ module "lambda_application_zip" {
   github_repo        = var.github_repo
   github_environment = var.github_environment
   github_region      = var.github_region
-
-  ecr_repository_name = var.ecr_repository_name
 }

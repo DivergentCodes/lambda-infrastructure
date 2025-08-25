@@ -3,6 +3,7 @@
 ########################################################
 
 resource "aws_iam_role" "codedeploy" {
+  count              = var.codedeploy_enabled ? 1 : 0
   name               = "${var.function_name}-codedeploy"
   assume_role_policy = data.aws_iam_policy_document.codedeploy_trust.json
 }
@@ -18,7 +19,8 @@ data "aws_iam_policy_document" "codedeploy_trust" {
 }
 
 resource "aws_iam_role_policy_attachment" "codedeploy_managed" {
-  role       = aws_iam_role.codedeploy.name
+  count      = var.codedeploy_enabled ? 1 : 0
+  role       = aws_iam_role.codedeploy[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSCodeDeployRoleForLambda"
 }
 
@@ -27,14 +29,16 @@ resource "aws_iam_role_policy_attachment" "codedeploy_managed" {
 ########################################################
 
 resource "aws_codedeploy_app" "lambda" {
+  count            = var.codedeploy_enabled ? 1 : 0
   name             = "${var.function_name}-app"
   compute_platform = "Lambda"
 }
 
 resource "aws_codedeploy_deployment_group" "lambda" {
-  app_name              = aws_codedeploy_app.lambda.name
+  count                 = var.codedeploy_enabled ? 1 : 0
+  app_name              = aws_codedeploy_app.lambda[0].name
   deployment_group_name = "${var.function_name}-dgroup"
-  service_role_arn      = aws_iam_role.codedeploy.arn
+  service_role_arn      = aws_iam_role.codedeploy[0].arn
 
   deployment_style {
     deployment_type   = "BLUE_GREEN"
